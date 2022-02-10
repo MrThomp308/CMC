@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 from sqlalchemy import false, true
+from pythonpancakes import PancakeSwapAPI 
 import time
 
 def getCarat(carat):
@@ -19,6 +20,7 @@ hoursAgo = '1'
 driverPath = r'C:\Users\Michael\ChromeDriver\chromedriver'
 options = webdriver.ChromeOptions()
 #options.add_argument('headless')
+ps = PancakeSwapAPI()
 
 foundDict = {}
 
@@ -60,7 +62,6 @@ while(found == false):
         if(symbolDict.get(sym).get('Added Ago') == str(hoursAgo + ' hours ago') or str('minutes') in symbolDict.get(sym).get('Added Ago')):
             if(symbolDict.get(sym).get('Network') == 'BNB'):
                 newSymbolDict.update({sym: symbolDict.get(sym)})
-                foundDict.update({sym: newSymbolDict.get(sym)})
 
     for sym in newSymbolDict:
         driver = webdriver.Chrome(executable_path=driverPath)
@@ -73,6 +74,11 @@ while(found == false):
 
         address = ''
         addresses =  driver.find_elements_by_tag_name('a')
+        for addres in addresses:
+            adres = addres.get_attribute('href')
+            if(adres is not None):
+                if('https://bscscan.com/token/' in adres):
+                    address = str(adres).replace('https://bscscan.com/token/', '')
 
 
         tempDict = symbolDict.get(sym)
@@ -80,10 +86,24 @@ while(found == false):
 
         symbolDict.update({sym: tempDict})
         newSymbolDict.update({sym: symbolDict.get(sym)})
+        foundDict.update({sym: newSymbolDict.get(sym)})
 
     for sym in foundDict:
         foundDict.update({sym: symbolDict.get(sym)})
 
-    print('\nNEWEST: \n'+ str(newSymbolDict))
-    print('\nUPDATED: \n' + str(foundDict))
+    print('\nNEWEST: \n')
+    for newD in newSymbolDict:
+        print(newD)
+        print(newSymbolDict.get(newD))
+        try:   
+            token = ps.tokens(address=str(newSymbolDict.get(newD).get('Address')))
+            print(token)
+        except Exception:
+            print('***** | Not On PancakeSwap | *****')
+
+    print('\nUPDATED: \n')
+    for fD in foundDict:
+        print(fD)
+        print(foundDict.get(fD))
+
     time.sleep(1* 60)
